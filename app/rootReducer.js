@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
+import database from 'infra/database/databaseReducer'
+import header from 'app/header/state/headerReducer';
 
-const mockReducer = (state = {}, action) => action.type === "something" ? { mock: 'mock'} : state;
-
-const rootReducer = combineReducers({ mockReducer });
+const rootReducer = combineReducers({ database, header });
 
 export default rootReducer;

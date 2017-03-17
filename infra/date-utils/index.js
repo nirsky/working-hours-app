@@ -6,15 +6,18 @@ const getDaysInMonth = (month, year) => {
     const days = [];
     while (date.getMonth() === month) {
         days.push({
+            id: getIdFromDate(date),
+            dayType: date.getDay() === 5 || date.getDay() === 6 ? 'Holiday' : 'Working Day',
             dayName: weekdays[date.getDay()],
             day: date.getDate(),
             month: months[date.getMonth()],
-            year: date.getFullYear(),
-            id: `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`
+            year: date.getFullYear()
         });
         date.setDate(date.getDate() + 1);
     }
     return days;
 };
 
-export { getDaysInMonth };
+const getIdFromDate = (date) => `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+
+export { getDaysInMonth, months, getIdFromDate };
