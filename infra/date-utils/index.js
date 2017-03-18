@@ -20,4 +20,6 @@ const getDaysInMonth = (month, year) => {
 
 const getIdFromDate = (date) => `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
 
-export { getDaysInMonth, months, getIdFromDate };
+const todayId = () => getIdFromDate(new Date());
+
+export { getDaysInMonth, months, getIdFromDate, todayId };

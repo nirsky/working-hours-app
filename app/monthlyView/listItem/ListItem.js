@@ -1,51 +1,68 @@
 import React, { Component } from 'react';
-import { View, ListView, Text } from 'react-native';
+import { View, ListView, Text, StyleSheet } from 'react-native';
 import { compose, mapProps, withProps } from 'recompose';
 import { connect } from 'react-redux';
 import { arrivalSet, departureSet, dayTypeSet } from 'infra/database/databaseActions';
 import { withToggle } from 'infra/toggle';
+import { todayId } from 'infra/date-utils';
 import { onDayTypePress } from './DayTypePicker';
 import styled from 'styled-components/native';
 import TimePicker from './TimePicker';
 
 const ListItem = ({ data, arrivalPicker, departurePicker, arrivalSet, departureSet, dayTypeSet, isToday }) => {
     return <Container isToday={isToday}>
-        <DateBox><Text style={{fontWeight: 'bold'}}>{data.day}</Text></DateBox>
+        <DateBox isToday={isToday}>
+            <Text style={{fontWeight: 'bold'}}>{data.day}</Text>
+        </DateBox>
+        <Separator/>
         <DayNameBox>
             <Text style={{marginLeft: 10}}>{data.dayName}</Text>
             {data.total && isWork(data.dayType) ?
-                <Text style={{marginLeft: 10,fontWeight: 'bold',fontStyle:'italic', fontSize: 11}}>{data.total + " Total"}</Text> : null}
+                <TotalHours negative={data.total.includes('0 >')}>
+                    {data.total + " Total"}
+                </TotalHours> : null}
         </DayNameBox>
-        <Seperator/>
+        <Separator/>
         {isWork(data.dayType) ?
             <View style={{ flexDirection: 'row'}}>
                 <TimeBox onPress={arrivalPicker.toggle}>
                     <Label>Arrival</Label>
-                    <Text>{data.arrival ? `${new Date(data.arrival).getHours()}:${new Date(data.arrival).getMinutes()}` : '00:00'}</Text>
+                    {data.arrival ? <Text>{formatEventHour(data.arrival)}</Text> : null}
                 </TimeBox>
-                <Seperator/>
+                <Separator/>
                 <TimeBox onPress={departurePicker.toggle}>
                     <Label>Departure</Label>
-                    <Text>{data.departure ? `${new Date(data.departure).getHours()}:${new Date(data.departure).getMinutes()}` : '00:00'}</Text>
+                    {data.departure ? <Text>{formatEventHour(data.departure)}</Text> : null}
                 </TimeBox>
-                <Seperator/>
+                <Separator/>
             </View> : null}
-        <DayTypeBox dayType={data.dayType}
+            <View style={{flex: 1}}>
+        <DayTypeBox dayType={data.dayType} isToday={isToday}
                     onPress={() => onDayTypePress((dayType) => dayTypeSet(data.id,dayType), data.id)}>
             <Text style={{fontSize: 15}}>{data.dayType}</Text>
         </DayTypeBox>
+            </View>
         <TimePicker visible={arrivalPicker.state}
+                    message={`Set arrival time for ${data.dayName}, ${data.id}`}
                     currentTime={data.arrival}
                     onSubmit={(time) => arrivalSet(data.id,time)}
                     onCancel={arrivalPicker.toggle}/>
         <TimePicker visible={departurePicker.state}
+                    message={`Set departure time for ${data.dayName}, ${data.id}`}
                     currentTime={data.departure}
                     onSubmit={(time) => departureSet(data.id,time)}
                     onCancel={departurePicker.toggle}/>
     </Container>};
 
 const isWork = (dayType) => dayType === 'Working Day' || dayType.includes('Half');
+const formatEventHour = (stringDate) => {
+    const date = new Date(stringDate);
+    let mins = date.getMinutes();
+    mins = mins < 10 ? '0'+mins : mins;
+    return `${date.getHours()}:${mins}`;
+};
 
+//TODO: update is today when app back from background
 const enhance = compose(
     connect(state => ({database: state.database})),
     mapProps( props => ({
@@ -54,14 +71,20 @@ const enhance = compose(
     connect(null, { arrivalSet, departureSet, dayTypeSet }),
     withToggle({propName: 'arrivalPicker', toggleStates: [true, false], defaultState: false}),
     withToggle({propName: 'departurePicker', toggleStates: [true, false], defaultState: false}),
-    withProps( ownProps => {
-        const today = new Date();
-        const todayId = `${today.getDate()}-${today.getMonth()+1}-${today.getFullYear()}`;
-        return { isToday: ownProps.data.id === todayId }
-    })
+    withProps(ownProps => ({ isToday: ownProps.data.id === todayId() }))
 );
 
 export default enhance(ListItem);
+
+const borderRadius = 30;
+
+const TotalHours = styled.Text`
+    color: ${props => props.negative ? '#ff9999' : 'black'}
+    marginLeft: 10; 
+    fontWeight: bold;
+    fontStyle: italic;
+    fontSize: 12;
+`;
 
 const Label = styled.Text`
    color: #696969; 
@@ -71,7 +94,6 @@ const Label = styled.Text`
 
 const TimeBox = styled.TouchableOpacity`
     width: 60;
-    height: 40;
     alignItems: center;
     justifyContent: center;
 `;
@@ -81,28 +103,27 @@ const DayTypeBox = styled.TouchableOpacity`
     alignSelf: stretch;
     alignItems: center;
     justifyContent: center;
+    borderTopRightRadius: ${props => props.isToday ? borderRadius-2 : borderRadius };
+    borderBottomRightRadius: ${props => props.isToday ? borderRadius-2 : borderRadius };
     background-color: ${props => dayTypeToColor[props.dayType] ? dayTypeToColor[props.dayType] : 'white'};
 `;
 
 const DayNameBox = styled.View`
     width: 90;
-    height: 40;
     justifyContent: center;
 `;
 
-const Seperator = styled.View`
-    height: 40;
-    width: 1;
-    backgroundColor: #696969;
+const Separator = styled.View`
+    height: 45;
+    width: ${StyleSheet.hairlineWidth};
+    backgroundColor: rgba(0, 0, 0, .2);
 `;
 
 const DateBox = styled.View`
     width: 25;
-    height: 40;
+    height: 45;
     justifyContent: center;
     alignItems: center;
-    borderRightWidth: 1;
-    borderColor: #696969;
 `;
 
 const Container = styled.View`
@@ -111,13 +132,16 @@ const Container = styled.View`
     shadowOffset: 0 0;
     shadowRadius: 1;
     shadowOpacity: 0.5;
-    borderWidth: ${props => props.isToday ? 3 : 0};
+    borderWidth: ${props => props.isToday ? 2 : 0};
+    borderLeftWidth: 0;
     borderColor: gold;
     alignSelf: stretch;
     align-items: center;
-    height: 40;
-    borderRadius: 8;
-    margin: 2;
+    height: 45;
+    borderTopRightRadius: ${borderRadius};
+    borderBottomRightRadius: ${borderRadius};
+    marginRight: 6;
+    marginVertical: 3;
     flex-direction: row;
 `;
 

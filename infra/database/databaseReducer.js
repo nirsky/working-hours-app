@@ -82,6 +82,8 @@ const calculateTotalHours = (arrival, departure) => {
         diffMins = 0;
     }
 
+    if (diffMins < 0 || diffHrs < 0) return '0 >';
+
     return diffHrs + ":" + (diffMins < 10 ? "0" : "") + diffMins;
 };
 

@@ -4,8 +4,8 @@ import { Provider } from 'react-redux';
 import { compose, applyMiddleware, createStore } from 'redux';
 import { persistStore, autoRehydrate } from 'redux-persist';
 import rootReducer from './rootReducer';
-import MonthlyView from './monthlyView/MonthlyViewContainer';
 import Header from 'app/header';
+import Scenes from 'app/navigation/scenesCreator';
 
 const store = createStore(
     rootReducer,
@@ -20,8 +20,8 @@ persistStore(store, { storage: AsyncStorage });
 
 export default () =>
     <Provider store={store}>
-        <View style={{flex: 1, backgroundColor: 'white', marginTop: 20}}>
+        <View style={{flex: 1, backgroundColor: 'white'}}>
             <Header/>
-            <MonthlyView/>
+            <Scenes/>
         </View>
     </Provider>
