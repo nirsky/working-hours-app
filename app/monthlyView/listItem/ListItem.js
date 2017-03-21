@@ -129,7 +129,7 @@ const DayNameBox = styled.TouchableOpacity`
     justifyContent: center;
 `;
 
-const Separator = styled.View`
+const Separator = styled.View` 
     marginVertical: 7;
     alignSelf: stretch;
     width: ${StyleSheet.hairlineWidth};
