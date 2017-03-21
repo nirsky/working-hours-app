@@ -25,6 +25,14 @@ const databaseReducer = (state = {}, action) => {
                     total: getTimeDifference(state[id], { departure: now.toString() })
                 }
             };
+        case C.TIME_CLEARED:
+            return {
+                ...state,
+                [action.id]: {
+                    ...state[action.id],
+                    ...(action.payload)
+                }
+            };
         case C.ARRIVAL_SET:
             return {
                 ...state,
@@ -41,6 +49,28 @@ const databaseReducer = (state = {}, action) => {
                     ...state[action.id],
                     departure: action.time,
                     total: getTimeDifference(state[action.id], { departure: action.time })
+                }
+            };
+        case C.COMMENT_CHANGED:
+            return action.height ?
+                {
+                    ...state,
+                    [action.id]: {
+                        ...state[action.id],
+                        comment: {
+                            text: action.text,
+                            height: action.height
+                        }
+                    }
+                } :
+            {
+                ...state,
+                [action.id]: {
+                    ...state[action.id],
+                    comment: {
+                        text: action.text,
+                        ...state[action.id].comment
+                    }
                 }
             };
         case C.DAY_TYPE_SET:

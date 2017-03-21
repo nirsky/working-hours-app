@@ -18,10 +18,13 @@ const enhance = compose(
     connect(state => ({
         month: state.header.month,
         year: state.header.year,
-        scroll: state.header.scroll
+        scroll: state.header.scroll,
+        holidays: state.settings.holidays
     }), { doneScrolling }),
     withProps(ownProps => ({
-        dataSource: (new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})).cloneWithRows(getDaysInMonth(ownProps.month,ownProps.year))
+        dataSource: (new ListView.DataSource({
+            rowHasChanged: (r1, r2) => r1 !== r2
+        })).cloneWithRows(getDaysInMonth(ownProps.month,ownProps.year,ownProps.holidays))
     }))
 );
 

@@ -25,12 +25,12 @@ const Header = ({ month, year, monthPicker, yearPicker, setYear, setMonth }) =>
         <View style={{flex: 2}}>
             <Button title={year.toString()} onPress={yearPicker.toggle}/>
         </View>
-        <DateSelector visible={monthPicker.state} onSubmit={setMonth}
+        {monthPicker.state ? <DateSelector visible={monthPicker.state} onSubmit={setMonth}
                       onCancel={monthPicker.toggle} currentDate={month}
-                      items={months.map((item, index) => <Picker.Item label={item} value={index} key={index}/>)}/>
-        <DateSelector visible={yearPicker.state} onSubmit={setYear}
+                      items={months.map((item, index) => <Picker.Item label={item} value={index} key={index}/>)}/> : null}
+        {yearPicker.state ? <DateSelector visible={yearPicker.state} onSubmit={setYear}
                       onCancel={yearPicker.toggle} currentDate={year}
-                      items={years.map((item, index) => <Picker.Item label={item} value={parseInt(item)} key={index}/>)}/>
+                      items={years.map((item, index) => <Picker.Item label={item} value={parseInt(item)} key={index}/>)}/> : null}
     </View>;
 
 const years = ['2017','2018','2019','2020','2021','2022','2023'];

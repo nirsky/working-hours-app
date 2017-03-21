@@ -2,29 +2,35 @@ import React, { Component } from 'react';
 import { View, ListView, Text, StyleSheet } from 'react-native';
 import { compose, mapProps, withProps } from 'recompose';
 import { connect } from 'react-redux';
-import { arrivalSet, departureSet, dayTypeSet } from 'infra/database/databaseActions';
+import { arrivalSet, departureSet, dayTypeSet, timeCleared, commentChanged } from 'infra/database/databaseActions';
 import { withToggle } from 'infra/toggle';
 import { todayId } from 'infra/date-utils';
 import { onDayTypePress } from './DayTypePicker';
 import styled from 'styled-components/native';
+import Comment from './Comment';
 import TimePicker from './TimePicker';
 
-const ListItem = ({ data, arrivalPicker, departurePicker, arrivalSet, departureSet, dayTypeSet, isToday }) => {
+const ListItem = ({ data, arrivalPicker, departurePicker, commentToggle, commentChanged,
+    arrivalSet, departureSet, dayTypeSet, timeCleared, isToday }) => {
     return <Container isToday={isToday}>
         <DateBox isToday={isToday}>
             <Text style={{fontWeight: 'bold'}}>{data.day}</Text>
         </DateBox>
         <Separator/>
-        <DayNameBox>
-            <Text style={{marginLeft: 10}}>{data.dayName}</Text>
+        <DayNameBox onPress={commentToggle.toggle}>
+            {data.comment && data.comment.text ?
+            <View style={{position: 'absolute', top: 3, right: 3}}>
+                <Text style={{fontSize: 10, backgroundColor: 'transparent'}}>{'🗨️'}</Text>
+            </View>: null}
+            <Text style={{marginLeft: 10, backgroundColor: 'transparent'}}>{data.dayName}</Text>
             {data.total && isWork(data.dayType) ?
                 <TotalHours negative={data.total.includes('0 >')}>
                     {data.total + " Total"}
                 </TotalHours> : null}
         </DayNameBox>
-        <Separator/>
+        {isWork(data.dayType) ? <Separator/> : null}
         {isWork(data.dayType) ?
-            <View style={{ flexDirection: 'row'}}>
+            <View style={{ flexDirection: 'row', height: isToday ? 41 : 45}}>
                 <TimeBox onPress={arrivalPicker.toggle}>
                     <Label>Arrival</Label>
                     {data.arrival ? <Text>{formatEventHour(data.arrival)}</Text> : null}
@@ -34,7 +40,7 @@ const ListItem = ({ data, arrivalPicker, departurePicker, arrivalSet, departureS
                     <Label>Departure</Label>
                     {data.departure ? <Text>{formatEventHour(data.departure)}</Text> : null}
                 </TimeBox>
-                <Separator/>
+                {data.dayType !== 'Half Day Off' ? <Separator/> : null}
             </View> : null}
             <View style={{flex: 1}}>
         <DayTypeBox dayType={data.dayType} isToday={isToday}
@@ -42,19 +48,27 @@ const ListItem = ({ data, arrivalPicker, departurePicker, arrivalSet, departureS
             <Text style={{fontSize: 15}}>{data.dayType}</Text>
         </DayTypeBox>
             </View>
-        <TimePicker visible={arrivalPicker.state}
-                    message={`Set arrival time for ${data.dayName}, ${data.id}`}
-                    currentTime={data.arrival}
+        <Comment visible={commentToggle.state}
+                 onHide={commentToggle.toggle}
+                 message={`Leave a comment for ${data.dayName}, ${data.id.replace(/-/g,'/')}`}
+                 height={data.comment ? data.comment.height : 25}
+                 text={data.comment ? data.comment.text : ''}
+                 onChange={(text, height) => commentChanged(data.id, text, height)}/>
+        {arrivalPicker.state ? <TimePicker visible={arrivalPicker.state}
+                    message={`Set arrival time for ${data.dayName}, ${data.id.replace(/-/g,'/')}`}
+                    initialTime={data.arrival}
                     onSubmit={(time) => arrivalSet(data.id,time)}
-                    onCancel={arrivalPicker.toggle}/>
-        <TimePicker visible={departurePicker.state}
-                    message={`Set departure time for ${data.dayName}, ${data.id}`}
-                    currentTime={data.departure}
+                    onClear={() => timeCleared(data.id, 'arrival')}
+                    onCancel={arrivalPicker.toggle}/> : null}
+        {departurePicker.state ? <TimePicker visible={departurePicker.state}
+                    message={`Set departure time for ${data.dayName}, ${data.id.replace(/-/g,'/')}`}
+                    initialTime={data.departure}
                     onSubmit={(time) => departureSet(data.id,time)}
-                    onCancel={departurePicker.toggle}/>
+                    onClear={() => timeCleared(data.id, 'departure')}
+                    onCancel={departurePicker.toggle}/> : null}
     </Container>};
 
-const isWork = (dayType) => dayType === 'Working Day' || dayType.includes('Half');
+const isWork = (dayType) => dayType === 'Work Day' || dayType.includes('Half');
 const formatEventHour = (stringDate) => {
     const date = new Date(stringDate);
     let mins = date.getMinutes();
@@ -64,13 +78,14 @@ const formatEventHour = (stringDate) => {
 
 //TODO: update is today when app back from background
 const enhance = compose(
-    connect(state => ({database: state.database})),
+    connect((state, props) => ({database: state.database[props.data.id]})),
     mapProps( props => ({
-        data: { ...(props.data), ...props.database[props.data.id]}
+        data: { ...(props.data), ...props.database }
     })),
-    connect(null, { arrivalSet, departureSet, dayTypeSet }),
+    connect(null, { arrivalSet, departureSet, dayTypeSet, timeCleared, commentChanged }),
     withToggle({propName: 'arrivalPicker', toggleStates: [true, false], defaultState: false}),
     withToggle({propName: 'departurePicker', toggleStates: [true, false], defaultState: false}),
+    withToggle({propName: 'commentToggle', toggleStates: [true, false], defaultState: false}),
     withProps(ownProps => ({ isToday: ownProps.data.id === todayId() }))
 );
 
@@ -108,20 +123,22 @@ const DayTypeBox = styled.TouchableOpacity`
     background-color: ${props => dayTypeToColor[props.dayType] ? dayTypeToColor[props.dayType] : 'white'};
 `;
 
-const DayNameBox = styled.View`
-    width: 90;
+const DayNameBox = styled.TouchableOpacity`
+    width: 95;
+    height: 50;
     justifyContent: center;
 `;
 
 const Separator = styled.View`
-    height: 45;
+    marginVertical: 7;
+    alignSelf: stretch;
     width: ${StyleSheet.hairlineWidth};
     backgroundColor: rgba(0, 0, 0, .2);
 `;
 
 const DateBox = styled.View`
     width: 25;
-    height: 45;
+    height: 50;
     justifyContent: center;
     alignItems: center;
 `;
@@ -137,7 +154,7 @@ const Container = styled.View`
     borderColor: gold;
     alignSelf: stretch;
     align-items: center;
-    height: 45;
+    height: 50;
     borderTopRightRadius: ${borderRadius};
     borderBottomRightRadius: ${borderRadius};
     marginRight: 6;
@@ -146,7 +163,7 @@ const Container = styled.View`
 `;
 
 const dayTypeToColor = {
-    'Working Day': 'white',
+    'Work Day': 'white',
     'Holiday': '#8fb4ef',
     'Sick Day': '#FFAF85',
     'Day Off': '#FFB5FD',

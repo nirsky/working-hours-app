@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { connect } from 'react-redux';
 import { getDaysInMonth} from 'infra/date-utils';
 import { compose, withProps } from 'recompose';
 import { workingDays } from './calculators';
 import styled from 'styled-components/native';
 
-const SummaryContainer = ({data}) => {
-    const { workDays, totalHours, dailyAverage, extra, daysOff, sickDays, holidays } = workingDays(data);
+const SummaryContainer = ({data, hoursPerDay}) => {
+    const { workDays, totalHours, dailyAverage, extra, daysOff, sickDays, holidays } = workingDays(data, hoursPerDay);
     return <ScrollView style={{flex: 1, backgroundColor: '#e3e5e8', paddingTop: 3}}>
         <Container>
             <Label>{'Work Days'}</Label>
@@ -44,10 +44,12 @@ const enhance = compose(
     connect(state => ({
         month: state.header.month,
         year: state.header.year,
-        database: state.database
+        database: state.database,
+        holidays: state.settings.holidays,
+        hoursPerDay: parseInt(state.settings.hoursPerDay.split(':')[0]) + parseInt((state.settings.hoursPerDay.split(':')[1]))/60
     })),
     withProps(props => ({
-        data: getDaysInMonth(props.month,props.year).map(day => ({...day, ...props.database[day.id]}))
+        data: getDaysInMonth(props.month,props.year,props.holidays).map(day => ({...day, ...props.database[day.id]}))
     }))
 );
 
@@ -66,10 +68,9 @@ const Stat = styled.Text`
 
 const Container = styled.TouchableOpacity`
     background-color: white;
-    shadowColor: black;
-    shadowOffset: -1 1;
-    shadowRadius: 2;
-    shadowOpacity: 0.5;
+    borderWidth: ${StyleSheet.hairlineWidth * 3};
+    borderRightWidth: 0;
+    borderColor: rgba(0, 0, 0, .2);
     borderRightWidth: 0;
     alignSelf: stretch;
     align-items: center;

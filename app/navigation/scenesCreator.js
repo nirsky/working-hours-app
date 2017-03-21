@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { TabNavigator, addNavigationHelpers } from 'react-navigation';
 import MonthlyView from 'app/monthlyView/MonthlyViewContainer';
 import SummaryView from 'app/summary/SummaryContainer';
+import SettingsContainer from 'app/settings/SettingsContainer';
 
 
 MonthlyView.navigationOptions = {
@@ -22,21 +23,31 @@ SummaryView.navigationOptions = {
     }
 };
 
+SettingsContainer.navigationOptions = {
+    tabBar: {
+        label: 'Settings',
+        icon: ({ tintColor }) => <Image source={require('./images/settings.png')}
+                                        style={{tintColor: tintColor, width: 26, height: 26}}/>
+    }
+};
+
 
 const AppNavigator = TabNavigator(
     {
         MonthlyView: { screen: MonthlyView },
         Summary: { screen: SummaryView},
+        Settings: { screen: SettingsContainer },
     },
     {
         swipeEnabled: true,
         animationEnabled: true,
         tabBarOptions: {
+            showLabel: false,
             labelStyle: { fontSize: 12 }
         },
     });
 
-const AppWithNavigationState = ({nav, dispatch }) =>
+const AppWithNavigationState = ({nav, dispatch}) =>
     <AppNavigator navigation={addNavigationHelpers({ dispatch: dispatch, state: nav})} />;
 
 export const navReducer = (state, action) => {
@@ -44,4 +55,4 @@ export const navReducer = (state, action) => {
     return newState || state;
 };
 
-export default connect(state => ({ nav: state.nav}))(AppWithNavigationState);
+export default connect(state => ({ nav: state.nav }))(AppWithNavigationState);

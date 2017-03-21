@@ -1,5 +1,5 @@
 
-export const workingDays = (data) => {
+export const workingDays = (data, hoursPerDay) => {
     let workDays = 0;
     let sickDays = 0;
     let daysOff = 0;
@@ -7,8 +7,8 @@ export const workingDays = (data) => {
     let totalMinutes = 0;
     let holidays = 0;
     data.forEach(x => {
-        if (x.total && !x.total.includes('0 >') && (x.dayType === 'Working Day' || x.dayType === 'Half Day Off')) {
-            if (x.dayType === 'Working Day') {
+        if (x.total && !x.total.includes('0 >') && (x.dayType === 'Work Day' || x.dayType === 'Half Day Off')) {
+            if (x.dayType === 'Work Day') {
                 workDays++;
             }
             else {
@@ -28,15 +28,15 @@ export const workingDays = (data) => {
             holidays++;
         }
     });
-    const dailyAvgMin = workDays > 0 ? parseInt((totalHours * 60 + totalMinutes)/workDays) : 0;
-    const extraMinutes = (totalHours * 60 + totalMinutes) - workDays * 9 * 60;
+    const dailyAvgMinutes = workDays > 0 ? parseInt((totalHours * 60 + totalMinutes)/workDays) : 0;
+    const extraMinutes = (totalHours * 60 + totalMinutes) - workDays * hoursPerDay * 60;
     totalHours+= parseInt(totalMinutes/60);
     const leftMinutes = totalMinutes%60;
 
     return {
         workDays, daysOff, sickDays, holidays,
         totalHours: totalHours + ':' + (leftMinutes < 10 ? "0" : "") + leftMinutes,
-        dailyAverage: formatMinutes(dailyAvgMin),
+        dailyAverage: formatMinutes(dailyAvgMinutes),
         extra: formatMinutes(extraMinutes)
     };
 };
