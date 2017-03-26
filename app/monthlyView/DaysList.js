@@ -20,7 +20,7 @@ const DaysList = ({ dataSource }: Props) =>
 const scrollToToday = lifecycle({
     componentWillReceiveProps(nextProps) {
         if (nextProps.scroll !== this.props.scroll && nextProps.scroll) {
-            const offset = ( new Date().getDate() - 1 ) * 47;
+            const offset = Math.min(( new Date().getDate() - 1 ) * 56 - 5, 22 * 56);
             this.refs.list.scrollTo({y: offset, animated: true});
             this.props.doneScrolling();
         }

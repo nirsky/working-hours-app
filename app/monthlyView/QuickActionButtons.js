@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { connect } from 'react-redux';
+import { compose } from 'recompose';
+import withPropsUpdatedOnAppActive from 'infra/behaviours/withPropsUpdatedOnAppActive';
 import styled from 'styled-components/native';
 import { arrivedPressed, leftPressed } from 'infra/database/databaseActions';
 import { todayId } from 'infra/date-utils';
@@ -19,14 +21,19 @@ const Footer = ({ arrivedPressed, leftPressed, hideArrived, hideLeft, smartMode 
         </Container> : null;
 };
 
-export default connect(state => {
-    const id = todayId();
-    return {
-        smartMode: state.settings.smartQuickAction,
-        hideArrived: state.settings.smartQuickAction && state.database[id] && state.database[id].arrival,
-        hideLeft: state.settings.smartQuickAction && state.database[id] && state.database[id].departure
-    }
-}, { arrivedPressed, leftPressed })(Footer);
+const enhance = compose(
+    withPropsUpdatedOnAppActive(() => ({id: todayId()})),
+    connect((state, props) => {
+        const id = props.id;
+        return {
+            smartMode: state.settings.smartQuickAction,
+            hideArrived: state.settings.smartQuickAction && state.database[id] && state.database[id].arrival,
+            hideLeft: state.settings.smartQuickAction && state.database[id] && state.database[id].departure
+        }
+    }, { arrivedPressed, leftPressed })
+);
+
+export default enhance(Footer);
 
 const Arrived = styled.TouchableOpacity`
     flex: 1;

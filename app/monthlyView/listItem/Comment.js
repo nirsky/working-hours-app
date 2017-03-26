@@ -11,7 +11,7 @@ const Comment = ({visible, onHide, text, height, onChange, message}) => {
             <TopView onPress={onHide}/>
             <View style={{alignSelf: 'stretch', height: 25, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center',
                             borderTopWidth: StyleSheet.hairlineWidth, borderColor:'rgba(0, 0, 0, 0.2)'}}>
-                <Text style={{color: '#696969'}}>{message}</Text>
+                <Text style={{color: '#0C42FD', fontWeight: 'bold'}}>{message}</Text>
             </View>
             <InputBox height={height || 25} >
                 <TextInput onChange={onChangeEvent}

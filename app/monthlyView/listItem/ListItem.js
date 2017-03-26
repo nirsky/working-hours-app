@@ -6,6 +6,7 @@ import { arrivalSet, departureSet, dayTypeSet, timeCleared, commentChanged } fro
 import { withToggle } from 'infra/toggle';
 import { todayId } from 'infra/date-utils';
 import { onDayTypePress } from './DayTypePicker';
+import withPropsUpdatedOnAppActive from 'infra/behaviours/withPropsUpdatedOnAppActive';
 import styled from 'styled-components/native';
 import Comment from './Comment';
 import TimePicker from './TimePicker';
@@ -19,7 +20,7 @@ const ListItem = ({ data, arrivalPicker, departurePicker, commentToggle, comment
         <Separator/>
         <DayNameBox onPress={commentToggle.toggle}>
             {data.comment && data.comment.text ?
-            <View style={{position: 'absolute', top: 3, right: 3}}>
+            <View style={{position: 'absolute', bottom: 3, right: 3}}>
                 <Text style={{fontSize: 10, backgroundColor: 'transparent'}}>{'🗨️'}</Text>
             </View>: null}
             <Text style={{marginLeft: 10, backgroundColor: 'transparent'}}>{data.dayName}</Text>
@@ -76,7 +77,6 @@ const formatEventHour = (stringDate) => {
     return `${date.getHours()}:${mins}`;
 };
 
-//TODO: update is today when app back from background
 const enhance = compose(
     connect((state, props) => ({database: state.database[props.data.id]})),
     mapProps( props => ({
@@ -86,12 +86,13 @@ const enhance = compose(
     withToggle({propName: 'arrivalPicker', toggleStates: [true, false], defaultState: false}),
     withToggle({propName: 'departurePicker', toggleStates: [true, false], defaultState: false}),
     withToggle({propName: 'commentToggle', toggleStates: [true, false], defaultState: false}),
-    withProps(ownProps => ({ isToday: ownProps.data.id === todayId() }))
+    withPropsUpdatedOnAppActive(ownProps => ({ isToday: ownProps.data.id === todayId() }))
 );
 
 export default enhance(ListItem);
 
 const borderRadius = 30;
+const height = 44;
 
 const TotalHours = styled.Text`
     color: ${props => props.negative ? '#ff9999' : 'black'}
@@ -99,6 +100,7 @@ const TotalHours = styled.Text`
     fontWeight: bold;
     fontStyle: italic;
     fontSize: 12;
+    backgroundColor: transparent;
 `;
 
 const Label = styled.Text`
@@ -125,7 +127,7 @@ const DayTypeBox = styled.TouchableOpacity`
 
 const DayNameBox = styled.TouchableOpacity`
     width: 95;
-    height: 50;
+    height: ${height};
     justifyContent: center;
 `;
 
@@ -138,7 +140,6 @@ const Separator = styled.View`
 
 const DateBox = styled.View`
     width: 25;
-    height: 50;
     justifyContent: center;
     alignItems: center;
 `;
@@ -154,7 +155,7 @@ const Container = styled.View`
     borderColor: gold;
     alignSelf: stretch;
     align-items: center;
-    height: 50;
+    height: ${height};
     borderTopRightRadius: ${borderRadius};
     borderBottomRightRadius: ${borderRadius};
     marginRight: 6;
