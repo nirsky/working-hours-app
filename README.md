@@ -1,2 +1,2 @@
 # working-hours-app
-Track your Working Hours
+Track your Working Hours :)
